@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "93e2c96fd0df21dd4c01595652f61e5c",
+    "hash": "b79bf722189cf02b2a11b8e59981aa74",
     "packages": [
         {
             "name": "blurpa/easy-session",
@@ -52,6 +52,53 @@
                 "session"
             ],
             "time": "2015-08-26 00:05:15"
+        },
+        {
+            "name": "blurpa/easy-validator",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/blurpa/EasyValidator.git",
+                "reference": "a1687d61d99e3186ce2f0c2060ed9e003819c53c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/blurpa/EasyValidator/zipball/a1687d61d99e3186ce2f0c2060ed9e003819c53c",
+                "reference": "a1687d61d99e3186ce2f0c2060ed9e003819c53c",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.5"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.8.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Blurpa\\EasyValidation\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nick Stuer",
+                    "email": "nickstuer@gmail.com",
+                    "homepage": "http://www.nickstuer.com",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A basic and easy to use validation library for PHP",
+            "homepage": "https://github.com/blurpa/EasyValidation",
+            "keywords": [
+                "validate",
+                "validation",
+                "validator"
+            ],
+            "time": "2015-08-27 01:48:06"
         }
     ],
     "packages-dev": [
@@ -1010,7 +1057,8 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "blurpa/easy-session": 20
+        "blurpa/easy-session": 20,
+        "blurpa/easy-validator": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

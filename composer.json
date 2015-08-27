@@ -2,7 +2,7 @@
     "name": "blurpa/easy-authentication",
     "type": "library",
     "description": "A basic and easy to use user authentication library for PHP. Uses SQLite.",
-    "keywords": ["session", "cookie", "cookies"],
+    "keywords": ["auth", "authentication"],
     "homepage": "https://github.com/blurpa/EasyAuthentication",
     "license": "MIT",
     "authors": [
@@ -15,7 +15,8 @@
     ],
     "require": {
         "php": ">=5.5.5",
-        "blurpa/easy-session": "dev-master"
+        "blurpa/easy-session": "dev-master",
+        "blurpa/easy-validator": "dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "4.8.*"
