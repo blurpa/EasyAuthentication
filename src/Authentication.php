@@ -15,104 +15,193 @@ namespace Blurpa\EasyAuthentication;
 use Blurpa\EasySession\Session;
 use PDO;
 
-use Blurpa\EasyAuthentication\Validator;
+use Blurpa\EasyValidator\Validator;
+
+/**
+ * Class Authentication
+ * @package Blurpa\EasyAuthentication
+ *
+ * TODO:
+ *      login DDOS protection.
+ *      recover password by email
+ */
 
 class Authentication
 {
+    /**
+     * @var Session
+     */
     private $session;
-    private $pdo;
-    private $lang;
 
+    /**
+     * @var PDO
+     */
+    private $pdo;
+
+    /**
+     * @var array
+     */
     private $messages = array();
+
+    /**
+     * @var int
+     */
     private $userId;
 
+    /**
+     * Constructor
+     *
+     * @param Session   $session
+     * @param PDO       $pdo
+     */
     public function __construct(Session $session, PDO $pdo)
     {
         $this->session = $session;
         $this->pdo = $pdo;
-
-        $this->lang = require(__DIR__ . '/Languages/english.php');
     }
 
-    public function boot()
-    {
-
-    }
-
-    public function getErrorMessages()
+    /**
+     * @return array
+     */
+    public function getMessages()
     {
         return $this->messages;
     }
 
+    /**
+     * @param string    $email
+     * @param string    $password
+     * @return bool
+     */
     public function loginWithEmail($email, $password)
     {
-        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE email=:email AND password=:password LIMIT 1");
-        $stmt->execute(array(':email' => $email, ':password' => $password));
+        $stmt = $this->pdo->prepare("SELECT id,password FROM users WHERE email=:email LIMIT 1");
+        $stmt->execute(array(':email' => $email));
 
-        $rowCount = $stmt->fetch(PDO::FETCH_NUM);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($rowCount[0] < 1) {
-            $this->messages[] = $this->lang['login_withEmail_invalid'];
+        if (count($row) < 1) {
+            $this->messages[] = "Provided email or password do not match our records.";
             return false;
         }
 
+        if (!password_verify($password, $row['password']))
+        {
+            $this->messages[] = "Provided email or password do not match our records.";
+            return false;
+        }
+
+        $this->userId = $row['id'];
         return true;
     }
 
-    public function register()
+    /**
+     * @param array     $data
+     *
+     * @return bool
+     */
+    public function register($data)
     {
-        $email = "12345678@test.com";
-        $password = "12345678";
-        $age = "18";
+        $csrfToken = $data['csrfToken'];
+
+        $email = $data['email'];
+        $username = $data['username'];
+        $password = $data['password'];
 
         $validator = new Validator();
         $validator->validate('email', $email)
             ->applyStop('Required')
-            ->applyStop('Email')
+            ->applyRule('Email')
             ->applyRule('MaxLength', 70);
+
+        $validator->validate('username', $username)
+            ->applyStop('Required')
+            ->applyRule('MinLength', 3)
+            ->applyRule('MaxLength', 22);
 
         $validator->validate('password', $password)
             ->applyStop('Required')
             ->applyRule('MinLength', 8);
 
-        $validator->validate('age', $age)
-            ->applyStop('Number')
-            ->applyStop('MinNumber', 18);
-
-        $this->messages = $validator->getErrors();
-        return $validator->getStatus();
-    }
-
-    public function validateEmail($email)
-    {
-        if (strlen($email) > 70) {
-            $this->messages[] = $this->lang['email_length_long'];
+        if (!$validator->getStatus())
+        {
+            $this->messages = $validator->getMessages();
             return false;
         }
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $this->messages[] = $this->lang['email_format_invalid'];
+        if ($this->findByEmail($email))
+        {
+            $this->messages[] = "Email already exists in our records";
+            return false;
+        }
+
+        if ($this->findByUsername($username))
+        {
+            $this->messages[] = "Username already exists.";
+            return false;
+        }
+
+        $passwordHash = password_hash($password, PASSWORD_BCRYPT, array("cost" => 10));
+        if (strlen($passwordHash) <= 20)
+        {
+            $this->messages[] = "Unexpected error";
+            return false;
+        }
+
+        $stmt = $this->pdo->prepare("INSERT INTO users ('username', 'email', 'password', 'timestamp') VALUES (:username, :email, :password, :timestamp)");
+        if (!$stmt->execute(array(':username'=> $username, ':email' => $email, ':password' => $passwordHash, 'timestamp' => time())))
+        {
+            $this->messages[] = "Database error occurred, Unknown";
             return false;
         }
 
         return true;
     }
 
-    public function validatePassword($password)
+    /**
+     * Checks if an email is in the database
+     *
+     * @param string    $email
+     * @return bool
+     */
+    public function findByEmail($email)
     {
-        if (strlen($password) < 8) {
-            $this->messages[] = $this->lang['password_length_short'];
-            return false;
-        }
-    }
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE email=:email LIMIT 1");
+        $stmt->execute(array(':email' => $email));
 
-    public function isError()
-    {
-        if (count($this->messages) >= 1) {
+        $rowCount = $stmt->fetch(PDO::FETCH_NUM);
+        if ($rowCount[0] >= 1) {
             return true;
         } else {
             return false;
         }
+    }
+
+    /**
+     * Checks if a username is in the database
+     *
+     * @param string    $username
+     * @return bool
+     */
+    public function findByUsername($username)
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE username=:username LIMIT 1");
+        $stmt->execute(array(':username' => $username));
+
+        $rowCount = $stmt->fetch(PDO::FETCH_NUM);
+        if ($rowCount[0] >= 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isError()
+    {
+        return (count($this->messages) >= 1);
     }
 
 
