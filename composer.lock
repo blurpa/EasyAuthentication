@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "b79bf722189cf02b2a11b8e59981aa74",
+    "hash": "2f3f1a787c5f4103e09b578f35041b24",
     "packages": [
         {
             "name": "blurpa/easy-session",
@@ -59,12 +59,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/blurpa/EasyValidator.git",
-                "reference": "a1687d61d99e3186ce2f0c2060ed9e003819c53c"
+                "reference": "f405dd9ebdf69a0e066db4544c9a375e4c90c4f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/blurpa/EasyValidator/zipball/a1687d61d99e3186ce2f0c2060ed9e003819c53c",
-                "reference": "a1687d61d99e3186ce2f0c2060ed9e003819c53c",
+                "url": "https://api.github.com/repos/blurpa/EasyValidator/zipball/f405dd9ebdf69a0e066db4544c9a375e4c90c4f5",
+                "reference": "f405dd9ebdf69a0e066db4544c9a375e4c90c4f5",
                 "shasum": ""
             },
             "require": {
@@ -76,7 +76,7 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Blurpa\\EasyValidation\\": "src/"
+                    "Blurpa\\EasyValidator\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -92,13 +92,13 @@
                 }
             ],
             "description": "A basic and easy to use validation library for PHP",
-            "homepage": "https://github.com/blurpa/EasyValidation",
+            "homepage": "https://github.com/blurpa/EasyValidator",
             "keywords": [
                 "validate",
                 "validation",
                 "validator"
             ],
-            "time": "2015-08-27 01:48:06"
+            "time": "2015-08-28 00:40:16"
         }
     ],
     "packages-dev": [
