@@ -85,14 +85,13 @@ class Authentication
             return false;
         }
 
-        if (!password_verify($password, $row['password']))
-        {
+        if (!password_verify($password, $row['password'])) {
             $this->messages[] = "Provided email or password do not match our records.";
             return false;
         }
 
         $this->userId = $row['id'];
-        return true;
+        return $this->performLogin($this->userId);
     }
 
     /**
@@ -123,39 +122,67 @@ class Authentication
             ->applyStop('Required')
             ->applyRule('MinLength', 8);
 
-        if (!$validator->getStatus())
-        {
+        /**
+         * If the validator failed any step, return false.
+         * No need to check database for email and username duplicates.
+         */
+        if (!$validator->getValidationStatus()) {
             $this->messages = $validator->getMessages();
             return false;
         }
 
-        if ($this->findByEmail($email))
-        {
+        if ($this->findByEmail($email)) {
             $this->messages[] = "Email already exists in our records";
-            return false;
         }
 
-        if ($this->findByUsername($username))
-        {
+        if ($this->findByUsername($username)) {
             $this->messages[] = "Username already exists.";
-            return false;
         }
 
         $passwordHash = password_hash($password, PASSWORD_BCRYPT, array("cost" => 10));
-        if (strlen($passwordHash) <= 20)
-        {
-            $this->messages[] = "Unexpected error";
+        if (strlen($passwordHash) <= 20) {
+            $this->messages[] = "Unexpected error, password invalid.";
+        }
+
+        if ($this->isError()) {
             return false;
         }
 
-        $stmt = $this->pdo->prepare("INSERT INTO users ('username', 'email', 'password', 'timestamp') VALUES (:username, :email, :password, :timestamp)");
-        if (!$stmt->execute(array(':username'=> $username, ':email' => $email, ':password' => $passwordHash, 'timestamp' => time())))
+        $stmt = $this->pdo->prepare("INSERT INTO users
+                  ('username', 'email', 'password', 'timestamp')
+                  VALUES (:username, :email, :password, :timestamp)");
+
+        if (!$stmt->execute(array(':username' => $username, ':email' => $email, ':password' => $passwordHash, 'timestamp' => time())))
         {
             $this->messages[] = "Database error occurred, Unknown";
             return false;
         }
 
+        $userId = $this->pdo->lastInsertId();
+        if (!$this->performLogin($userId)) {
+            $this->messages[] = "Unexpected error occurred during login. Account created successfully though.";
+            return false;
+        }
+
         return true;
+    }
+
+    /**
+     * @param $userId
+     *
+     * @return bool
+     */
+    public function performLogin($userId)
+    {
+        $authToken = $this->session->generateToken();
+
+        $this->session->setCookie('authToken', $authToken);
+
+        $stmt = $this->pdo->prepare("INSERT INTO auth_tokens
+                  ('token', 'userid')
+                  VALUES (:token, :userid)");
+
+        return $stmt->execute(array(':token' => $authToken, ':userid' => $userId));
     }
 
     /**
@@ -170,11 +197,8 @@ class Authentication
         $stmt->execute(array(':email' => $email));
 
         $rowCount = $stmt->fetch(PDO::FETCH_NUM);
-        if ($rowCount[0] >= 1) {
-            return true;
-        } else {
-            return false;
-        }
+
+        return ($rowCount[0] >= 1);
     }
 
     /**
@@ -189,11 +213,8 @@ class Authentication
         $stmt->execute(array(':username' => $username));
 
         $rowCount = $stmt->fetch(PDO::FETCH_NUM);
-        if ($rowCount[0] >= 1) {
-            return true;
-        } else {
-            return false;
-        }
+
+        return ($rowCount[0] >= 1);
     }
 
     /**
